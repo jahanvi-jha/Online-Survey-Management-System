@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-9">
+        <form method="POST" id="survey-form">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <input type="text" name="title" class="form-control form-control-lg mb-2" placeholder="Survey Title" required>
+                    <textarea name="description" class="form-control" placeholder="Description (Optional)"></textarea>
+                </div>
+            </div>
+
+            <div id="questions-container">
+                <div class="card mb-3 question-block" data-q-index="0">
+                    <div class="card-body">
+                        <h5>Question <span class="q-number">1</span></h5>
+                        <input type="text" name="questions[]" class="form-control mb-3" placeholder="Enter your question" required>
+                        
+                        <div class="options-area ms-4">
+                            <h6>Options:</h6>
+                            <div class="options-list">
+                                <input type="text" name="options_0[]" class="form-control mb-1" placeholder="Option 1" required>
+                                <input type="text" name="options_0[]" class="form-control mb-1" placeholder="Option 2" required>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-link add-option" data-q-index="0">+ Add another option</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="button" id="add-question" class="btn btn-outline-primary">Add New Question</button>
+                <button type="submit" class="btn btn-success flex-grow-1">Save Survey</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let questionCount = 1;
+
+    // 1. Logic to add a NEW QUESTION block
+    document.getElementById('add-question').addEventListener('click', function() {
+        const container = document.getElementById('questions-container');
+        const newBlock = document.createElement('div');
+        newBlock.className = 'card mb-3 question-block';
+        newBlock.setAttribute('data-q-index', questionCount);
+        
+        newBlock.innerHTML = `
+            <div class="card-body">
+                <h5>Question <span class="q-number">${questionCount + 1}</span></h5>
+                <input type="text" name="questions[]" class="form-control mb-3" placeholder="Enter your question" required>
+                <div class="options-area ms-4">
+                    <h6>Options:</h6>
+                    <div class="options-list">
+                        <input type="text" name="options_${questionCount}[]" class="form-control mb-1" placeholder="Option 1" required>
+                        <input type="text" name="options_${questionCount}[]" class="form-control mb-1" placeholder="Option 2" required>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-link add-option" data-q-index="${questionCount}">+ Add another option</button>
+                </div>
+            </div>
+        `;
+        container.appendChild(newBlock);
+        questionCount++;
+    });
+
+    // 2. Logic to add a NEW OPTION within a question
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('add-option')) {
+            const index = e.target.getAttribute('data-q-index');
+            const list = e.target.previousElementSibling;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = `options_${index}[]`;
+            input.className = 'form-control mb-1';
+            input.placeholder = 'New Option';
+            list.appendChild(input);
+        }
+    });
+</script>
+{% endblock %}

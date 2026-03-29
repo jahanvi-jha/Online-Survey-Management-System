@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="main-nav">
+        <div class="container nav-wrapper">
+            <a class="logo" href="{{ url_for('dashboard') }}">📊 SurveyBuilder</a>
+            
+            <ul class="nav-links">
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="user-greeting">
+                        Hello, <strong>{{ current_user.username }}</strong>
+                    </li>
+                    <li>
+                        <a class="btn btn-logout" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                    <li><a class="btn btn-primary" href="{{ url_for('register') }}">Register</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+       
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        // Handle alert dismissal
+        document.addEventListener('DOMContentLoaded', function() {
+            const alertCloseButtons = document.querySelectorAll('.alert-dismissible .btn-close');
+            alertCloseButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const alert = this.closest('.alert');
+                    if (alert) {
+                        alert.classList.add('hide');
+                        setTimeout(() => alert.remove(), 300);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow border-0">
+            <div class="card-body p-5">
+                <h3 class="text-center mb-4">Create an Account</h3>
+                
+                {% with messages = get_flashed_messages() %}
+                  {% if messages %}
+                    {% for message in messages %}
+                      <div class="alert alert-danger alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" aria-label="Close"></button>
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" placeholder="Choose a username" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" id="password" class="form-control" placeholder="Min. 8 characters" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="Repeat password" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2">Sign Up</button>
+                </form>
+
+                <div class="mt-4 text-center">
+                    <small class="text-muted">Already have an account? <a href="{{ url_for('login') }}">Login here</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple frontend check to ensure passwords match before even sending to Flask
+    const form = document.querySelector('form');
+    const pass = document.getElementById('password');
+    const confirm = document.getElementById('confirm_password');
+
+    form.addEventListener('submit', function(e) {
+        if (pass.value !== confirm.value) {
+            e.preventDefault();
+            alert("Passwords do not match!");
+        }
+    });
+</script>
+{% endblock %}
