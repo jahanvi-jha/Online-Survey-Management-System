@@ -45,11 +45,10 @@ class Response(db.Model):
     __tablename__ = 'responses'
     id = db.Column(db.Integer, primary_key=True)
     
-    # Foreign Keys
     survey_id = db.Column(db.Integer, db.ForeignKey('surveys.id'), nullable=False)
     question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
     option_id = db.Column(db.Integer, db.ForeignKey('question_options.id'), nullable=False)
     
-    # Optional: Track who responded (Null if anonymous)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    user = db.relationship('User', backref='responses')
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)

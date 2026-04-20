@@ -36,11 +36,13 @@
                     <td><strong>{{ survey.title }}</strong></td>
                     <td><span class="badge bg-secondary">{{ survey.responses | map(attribute='user_id') | unique | list | length }}</span></td>
                     <td>
+                        <div class="action-buttons">
                         <a href="{{ url_for('view_survey', survey_id=survey.id) }}" class="btn btn-sm btn-outline-warning">View</a>
-                        <a href="#" class="btn btn-sm btn-outline-success">Analyze</a>
-                        <form action="{{ url_for('delete_survey', survey_id=survey.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this survey and all its data?');">
+                        <a href="{{ url_for('analysis_page', survey_id=survey.id) }}" class="btn btn-sm btn-outline-success">Analyze</a>
+                        <form action="{{ url_for('delete_survey', survey_id=survey.id) }}" method="POST" style="display:inline-block; margin: 0;" onsubmit="return confirm('Delete this survey and all its data?');">
                             <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                         </form>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}

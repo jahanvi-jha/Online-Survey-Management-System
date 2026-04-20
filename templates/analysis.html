@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Survey Analysis Dashboard</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Select Survey to Analyze</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label for="surveySelect" class="form-label">Choose a survey:</label>
+                <select id="surveySelect" class="form-control">
+                    <option value="">Select a survey...</option>
+                    {% for survey in my_surveys %}
+                    <option value="{{ survey.id }}" {% if survey.id == current_survey_id or (current_survey_id is none and loop.first) %}selected{% endif %}>{{ survey.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="analysisContent" style="display: none;">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-dark text-white">
+                <h3 class="mb-0">Survey Respondents</h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-0"><strong>Users who responded:</strong></p>
+                <div id="respondentsList" class="d-flex flex-wrap gap-2"></div>
+            </div>
+        </div>
+
+        <div id="chartsContainer">
+            <!-- Charts will be dynamically generated here -->
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const surveySelect = document.getElementById('surveySelect');
+    const analysisContent = document.getElementById('analysisContent');
+    const respondentsList = document.getElementById('respondentsList');
+    const chartsContainer = document.getElementById('chartsContainer');
+
+    // Store chart instances to destroy them when loading new data
+    let chartInstances = [];
+
+    surveySelect.addEventListener('change', function() {
+        const surveyId = this.value;
+        if (surveyId) {
+            loadSurveyData(surveyId);
+        } else {
+            analysisContent.style.display = 'none';
+        }
+    });
+
+    // Load initial survey if one is selected
+    if (surveySelect.value) {
+        loadSurveyData(surveySelect.value);
+    }
+
+    function loadSurveyData(surveyId) {
+        fetch(`/api/survey-data/${surveyId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Clear existing charts
+                chartInstances.forEach(chart => chart.destroy());
+                chartInstances = [];
+                chartsContainer.innerHTML = '';
+
+                // Show respondents
+                respondentsList.innerHTML = '';
+                if (data.users.length > 0) {
+                    data.users.forEach(user => {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-secondary';
+                        badge.textContent = user;
+                        respondentsList.appendChild(badge);
+                    });
+                } else {
+                    respondentsList.innerHTML = '<em>No responses yet</em>';
+                }
+
+                // Generate charts for each question
+                data.questions.forEach((question, index) => {
+                    createChartForQuestion(question, index);
+                });
+
+                analysisContent.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error loading survey data:', error);
+                alert('Error loading survey data');
+            });
+    }
+
+    function createChartForQuestion(question, index) {
+        const chartCard = document.createElement('div');
+        chartCard.className = 'card shadow mb-4 chart-card';
+
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'card-header';
+        cardHeader.innerHTML = `<h4 class="mb-0">${question.question_text}</h4>`;
+
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body';
+
+        const canvas = document.createElement('canvas');
+        canvas.id = `chart-${index}`;
+
+        cardBody.appendChild(canvas);
+        chartCard.appendChild(cardHeader);
+        chartCard.appendChild(cardBody);
+        chartsContainer.appendChild(chartCard);
+
+        const labels = question.options.map(option => option.option_text);
+        const values = question.options.map(option => option.users.length);
+
+        const ctx = canvas.getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Responses',
+                    data: values,
+                    backgroundColor: labels.map(() => 'rgba(111, 66, 193, 0.8)'),
+                    borderColor: labels.map(() => 'rgba(13, 110, 253, 1)'),
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    barPercentage: 0.75,
+                    categoryPercentage: 0.9
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 12,
+                        bottom: 6,
+                        left: 6,
+                        right: 6
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            
+                            display: true,
+                            text: 'Options',
+                            color: '#495057',
+                            font: {
+                                weight: '600'
+                            }
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 0,
+                            minRotation: 0,
+                            color: '#495057'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of responses',
+                            color: '#495057',
+                            font: {
+                                weight: '600'
+                            }
+                        },
+                        ticks: {
+                            stepSize: 1,
+                            color: '#495057'
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const option = question.options[context.dataIndex];
+                                const count = option.users.length;
+                                const names = option.users.length ? option.users.join(', ') : 'No responses yet';
+                                return [
+                                    `Responses: ${count}`,
+                                    `Users: ${names}`
+                                ];
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        chartInstances.push(chart);
+    }
+});
+</script>
+
+
+{% endblock %}
